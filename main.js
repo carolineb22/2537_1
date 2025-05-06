@@ -18,7 +18,7 @@ const expireTime = 24 * 60 * 60 * 1000; //expires after 1 day  (hours * minutes 
 const mongodb_user = "carolinebastiaa";
 const mongodb_password = "AshTucker123";
 
-const node_session_secret = "2ec62a80-7111-4ca6-9a89-af20d800e0ef";
+const node_session_secret = "fb3cbb6a-5437-41c1-9582-06cbd00f083a";
 /* END secret section */
 
 app.use(express.urlencoded({extended: false}));
