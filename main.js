@@ -43,6 +43,7 @@ const uri = `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.czaddbl.
 const client = new MongoClient(uri);
 const userCollection = client.db(process.env.MONGODB_DATABASE).collection("users");
 
+console.log("Connecting to database:", process.env.MONGODB_DATABASE);
 
 app.get(['/', '/home'], (req, res) => {
     if (req.session.authenticated) {
