@@ -25,7 +25,7 @@ const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
 app.use(express.urlencoded({extended: false}));
 
 var mongoStore = MongoStore.create({
-	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@process.env.MONGODB_HOST/sessions`,
+	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.czaddbl.mongodb.net/sessions`,
  	crypto: {
  		secret: mongodb_session_secret
  	}
@@ -39,7 +39,7 @@ app.use(session({
 }
 ));
 
-const uri = `mongodb+srv://${mongodb_user}:${mongodb_password}@process.env.MONGODB_HOST/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.czaddbl.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
 const userCollection = client.db(process.env.MONGODB_DATABASE).collection("users");
 
