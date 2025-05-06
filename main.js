@@ -199,7 +199,7 @@ app.post('/login', async (req, res) => {
         }
 
         req.session.authenticated = true;
-        req.session.name = name;
+        req.session.email = email;
         req.session.cookie.maxAge = expireTime;
 
         res.redirect('/members');
