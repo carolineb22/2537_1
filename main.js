@@ -166,7 +166,7 @@ app.post('/submitUser', async (req, res) => {
 
 
 app.post('/login', async (req, res) => {
-    var name = req.body.email;
+    var email = req.body.email;
     var password = req.body.password;
 
     // ✅ Joi validation schema
