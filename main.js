@@ -48,7 +48,7 @@ app.get(['/', '/home'], (req, res) => {
     if (req.session.authenticated) {
         // User is authenticated, show welcome message
         res.send(`
-            <h1>Hello, ${req.session.username}!</h1>
+            <h1>Hello, ${req.session.name}!</h1>
             <a href='/members'>Go to member's area</a><br>
             <a href='/logout'>Log out</a>
         `);
@@ -83,7 +83,7 @@ app.get('/signup', (req, res) => {
     <!-- Sign Up Step 2-->
     <h2>Create user</h2>
     <form action='/submitUser' method='post'>
-        <input name='username' type='text' placeholder='username' required>
+        <input name='name' type='text' placeholder='name' required>
         <input name='email' type='email' placeholder='email' required>
         <input name='password' type='password' placeholder='password' required>
         <button type='submit'>Submit</button>
@@ -99,7 +99,7 @@ app.get('/login', (req,res) => {
      <!-- Login Step 2-->
     log in
     <form action='/login' method='post'>
-    <input name='username' type='text' placeholder='username'>
+    <input name='email' type='email' placeholder='email'>
     <input name='password' type='password' placeholder='password'>
     <button>Submit</button>
     </form>
@@ -109,19 +109,19 @@ app.get('/login', (req,res) => {
 
 // Sign Up Step 3
 app.post('/submitUser', async (req, res) => {
-    var username = req.body.username;
+    var name = req.body.name;
     var email = req.body.email;
     var password = req.body.password;
 
     // Joi validation schema
     const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(20).required(),
+        name: Joi.string().alphanum().min(3).max(20).required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(6).max(30).required()
     });
 
     // Validate the input
-    const validationResult = schema.validate({ username, email, password });
+    const validationResult = schema.validate({ name, email, password });
 
     if (validationResult.error != null) {
         console.log(validationResult.error);
@@ -144,14 +144,14 @@ app.post('/submitUser', async (req, res) => {
 
         // Insert user
         await userCollection.insertOne({
-            username: username,
+            name: name,
             email: email,
             password: hashedPassword
         });
 
         // Start session
         req.session.authenticated = true;
-        req.session.username = username;
+        req.session.name = name;
         req.session.cookie.maxAge = expireTime;
 
         res.redirect('/members');
@@ -166,17 +166,17 @@ app.post('/submitUser', async (req, res) => {
 
 
 app.post('/login', async (req, res) => {
-    var username = req.body.username;
+    var name = req.body.email;
     var password = req.body.password;
 
     // ✅ Joi validation schema
     const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(20).required(),
+        email: Joi.string().email().required(),
         password: Joi.string().min(6).max(30).required()
     });
 
     // Validate user input
-    const validationResult = schema.validate({ username, password });
+    const validationResult = schema.validate({ email, password });
 
     if (validationResult.error != null) {
         console.log(validationResult.error);
@@ -187,9 +187,9 @@ app.post('/login', async (req, res) => {
     try {
         await client.connect();
 
-        const user = await userCollection.findOne({ username: username });
+        const user = await userCollection.findOne({ email: email });
         if (!user) {
-            res.send("Invalid username. <a href='/login'>Try again</a>");
+            res.send("Invalid email. <a href='/login'>Try again</a>");
             return;
         }
 
@@ -199,7 +199,7 @@ app.post('/login', async (req, res) => {
         }
 
         req.session.authenticated = true;
-        req.session.username = username;
+        req.session.name = name;
         req.session.cookie.maxAge = expireTime;
 
         res.redirect('/members');
@@ -219,7 +219,7 @@ app.get('/members', (req, res) => {
         const randomImage = images[Math.floor(Math.random() * images.length)];
 
         res.send(`
-            <h1>Hello ${req.session.username}!</h1>
+            <h1>Hello ${req.session.name}!</h1>
             <img src='/${randomImage}' alt='Random Cat' style='width:250px;' />
             <br/>
             <a href='/logout'>Log out</a>
