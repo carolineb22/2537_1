@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-const expireTime = 1 * 0 * 0 * 0; //expires after 1 hour  (hours * minutes * seconds * millis)
+const expireTime = 1 * 60 * 60 * 1000; //expires after 1 hour  (hours * minutes * seconds * millis)
 
 
 /* secret information section */
@@ -201,6 +201,7 @@ app.post('/login', async (req, res) => {
 
         req.session.authenticated = true;
         req.session.email = email;
+        req.session.name = user.name; 
         req.session.cookie.maxAge = expireTime;
 
         res.redirect('/members');
