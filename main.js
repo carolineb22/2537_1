@@ -154,7 +154,7 @@ app.post('/submitUser', async (req, res) => {
         req.session.username = username;
         req.session.cookie.maxAge = expireTime;
 
-        res.redirect('/home');
+        res.redirect('/members');
     } catch (err) {
         console.error(err);
         res.status(500).send("Error registering user. Please try again.");
@@ -202,7 +202,7 @@ app.post('/login', async (req, res) => {
         req.session.username = username;
         req.session.cookie.maxAge = expireTime;
 
-        res.redirect('/home');
+        res.redirect('/members');
 
     } catch (err) {
         console.error(err);
