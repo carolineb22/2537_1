@@ -15,17 +15,17 @@ const expireTime = 24 * 60 * 60 * 1000; //expires after 1 day  (hours * minutes 
 
 
 /* secret information section */
-const mongodb_user = "carolinebastiaa";
-const mongodb_password = "AshTucker123";
+const mongodb_user = process.env.MONGODB_USER;
+const mongodb_password = process.env.MONGODB_PASSWORD;
 
-const node_session_secret = "fb3cbb6a-5437-41c1-9582-06cbd00f083a";
-const mongodb_session_secret = "0927a348-3fa9-4eca-b8df-83f89062c3bd";
+const node_session_secret = process.env.NODE_SESSION_SECRET;
+const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
 /* END secret section */
 
 app.use(express.urlencoded({extended: false}));
 
 var mongoStore = MongoStore.create({
-	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.czaddbl.mongodb.net/sessions`,
+	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@process.env.MONGODB_HOST/sessions`,
  	crypto: {
  		secret: mongodb_session_secret
  	}
@@ -39,9 +39,9 @@ app.use(session({
 }
 ));
 
-const uri = `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.czaddbl.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${mongodb_user}:${mongodb_password}@process.env.MONGODB_HOST/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
-const userCollection = client.db("2537db").collection("users"); // Use your actual DB and collection names
+const userCollection = client.db(process.env.MONGODB_DATABASE).collection("users");
 
 
 app.get(['/', '/home'], (req, res) => {
