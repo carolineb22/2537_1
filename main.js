@@ -10,6 +10,7 @@ require('dotenv').config()
 const port = process.env.PORT || 3000;
 
 const app = express();
+app.set('view engine', 'ejs');
 
 const expireTime = 1 * 60 * 60 * 1000; //expires after 1 hour  (hours * minutes * seconds * millis)
 
@@ -48,64 +49,44 @@ console.log("Connecting to database:", process.env.MONGODB_DATABASE);
 app.get(['/', '/home'], (req, res) => {
     if (req.session.authenticated) {
         // User is authenticated, show welcome message
-        res.send(`
-            <h1>Hello, ${req.session.name}!</h1>
-            <a href='/members'>Go to member's area</a><br>
-            <a href='/logout'>Log out</a>
-        `);
+        res.render('home_loggedin.ejs', { name: req.session.name });
         return;
 
     } else {
         // User is not authenticated, show login and signup options
         // Login and Sign Up Step 1
-        res.send(`
-            <h1>Welcome to the site!</h1>
-            <a href='/login'>Log in</a><br>
-            <a href='/signup'>Sign up</a>
-        `);
+        res.render('home_loggedout.ejs');
         return;
     }
 });
 
-app.get('/logout', (req,res) => {
+
+app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.log(err);
             res.status(500).send("Error logging out");
         } else {
-            res.redirect('/');
+            res.redirect('/home');
         }
     });
 });
 
-
 app.get('/signup', (req, res) => {
-    var html = `
-    <!-- Sign Up Step 2-->
-    <h2>Create user</h2>
-    <form action='/submitUser' method='post'>
-        <input name='name' type='text' placeholder='name' required>
-        <input name='email' type='email' placeholder='email' required>
-        <input name='password' type='password' placeholder='password' required>
-        <button type='submit'>Submit</button>
-    </form>
-    `;
-    res.send(html);
+    res.render('signup');
 });
 
 
 
 app.get('/login', (req,res) => {
-    var html = `
-     <!-- Login Step 2-->
-    log in
-    <form action='/login' method='post'>
-    <input name='email' type='email' placeholder='email'>
-    <input name='password' type='password' placeholder='password'>
-    <button>Submit</button>
-    </form>
-    `;
-    res.send(html);
+    res.render('login');
+});
+
+
+// allows us to use the session variable in all views
+app.use((req, res, next) => {
+    res.locals.name = req.session.name;
+    next();
 });
 
 // Sign Up Step 3
@@ -131,7 +112,6 @@ app.post('/submitUser', async (req, res) => {
     }
 
     try {
-        await client.connect();
 
         // Check if user with same email already exists
         const existingUser = await userCollection.findOne({ email: email });
@@ -147,7 +127,8 @@ app.post('/submitUser', async (req, res) => {
         await userCollection.insertOne({
             name: name,
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
+            user_type: "user"
         });
 
         // Start session
@@ -155,64 +136,49 @@ app.post('/submitUser', async (req, res) => {
         req.session.name = name;
         req.session.cookie.maxAge = expireTime;
 
-        res.redirect('/members');
+        res.render('home_loggedin', { name: req.session.name });
     } catch (err) {
         console.error(err);
         res.status(500).send("Error registering user. Please try again.");
     } finally {
-        await client.close();
+        console.log("User registered:", name);
     }
 });
 
 
 
 app.post('/login', async (req, res) => {
-    var email = req.body.email;
-    var password = req.body.password;
+    const { email, password } = req.body;
 
-    // ✅ Joi validation schema
+    // Validate input using Joi
     const schema = Joi.object({
         email: Joi.string().email().required(),
-        password: Joi.string().min(6).max(30).required()
+        password: Joi.string().min(6).max(30).required(),
     });
 
-    // Validate user input
     const validationResult = schema.validate({ email, password });
-
-    if (validationResult.error != null) {
-        console.log(validationResult.error);
-        res.send(`${validationResult.error.details[0].message}. <a href='/login'>Try again</a>`);
-        return;
+    if (validationResult.error) {
+        return res.send(`${validationResult.error.details[0].message}. <a href='/login'>Try again</a>`);
     }
 
     try {
-        await client.connect();
-
-        const user = await userCollection.findOne({ email: email });
-        if (!user) {
-            res.send("Invalid email. <a href='/login'>Try again</a>");
-            return;
-        }
-
-        if (!bcrypt.compareSync(password, user.password)) {
-            res.send("Invalid password. <a href='/login'>Try again</a>");
-            return;
+        const user = await userCollection.findOne({ email });
+        if (!user || !bcrypt.compareSync(password, user.password)) {
+            return res.send("Invalid email or password. <a href='/login'>Try again</a>");
         }
 
         req.session.authenticated = true;
         req.session.email = email;
-        req.session.name = user.name; 
+        req.session.name = user.name;
         req.session.cookie.maxAge = expireTime;
 
-        res.redirect('/members');
-
+        res.redirect('/home'); // Redirect to home after successful login
     } catch (err) {
         console.error(err);
         res.status(500).send("Error logging in. Please try again.");
-    } finally {
-        await client.close();
     }
 });
+
 
 app.get('/members', (req, res) => {
     if (req.session.authenticated) {
@@ -220,16 +186,62 @@ app.get('/members', (req, res) => {
         const images = ['cat1.jpg', 'cat2.jpg', 'cat3.jpg'];
         const randomImage = images[Math.floor(Math.random() * images.length)];
 
-        res.send(`
-            <h1>Hello ${req.session.name}!</h1>
-            <img src='/${randomImage}' alt='Random Cat' style='width:250px;' />
-            <br/>
-            <a href='/logout'>Log out</a>
-        `);
+        res.render(`members`, {user: req.session.name, image: randomImage});
     } else {
-        res.status(403).send("You are not authorized to view this page. <a href='/login'>Log in</a>");
+        res.redirect('/home');
     }
 });
+
+app.get('/admin', async (req, res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+        return;
+    }
+
+    const currentUser = await userCollection.findOne({ email: req.session.email });
+    if (!currentUser || currentUser.user_type !== "admin") {
+        res.status(403).send("You are not authorized to view this page.");
+        return;
+    }
+
+    const users = await userCollection.find({}).toArray();
+    res.render('admin', { users, currentUserEmail: req.session.email });
+});
+
+app.get('/promote/:email', async (req, res) => {
+    if (!req.session.authenticated) return res.redirect('/login');
+
+    const currentUser = await userCollection.findOne({ email: req.session.email });
+    if (!currentUser || currentUser.user_type !== "admin") {
+        return res.status(403).send("Not authorized.");
+    }
+
+    const targetEmail = req.params.email;
+    if (targetEmail === req.session.email) {
+        return res.send("You can't change your own admin status.");
+    }
+
+    await userCollection.updateOne({ email: targetEmail }, { $set: { user_type: "admin" } });
+    res.redirect('/admin');
+});
+
+app.get('/demote/:email', async (req, res) => {
+    if (!req.session.authenticated) return res.redirect('/login');
+
+    const currentUser = await userCollection.findOne({ email: req.session.email });
+    if (!currentUser || currentUser.user_type !== "admin") {
+        return res.status(403).send("Not authorized.");
+    }
+
+    const targetEmail = req.params.email;
+    if (targetEmail === req.session.email) {
+        return res.send("You can't change your own admin status.");
+    }
+
+    await userCollection.updateOne({ email: targetEmail }, { $set: { user_type: "user" } });
+    res.redirect('/admin');
+});
+
 
 
 
@@ -239,6 +251,15 @@ app.use((req, res, next) => {
     res.status(404).send("Page not found - 404");
 });
 
-app.listen(port, () => {
-	console.log("Node application listening on port "+port);
-}); 
+(async () => {
+    try {
+        await client.connect();
+        console.log("Connected to MongoDB");
+
+        app.listen(port, () => {
+            console.log("Node application listening on port " + port);
+        });
+    } catch (err) {
+        console.error("Failed to connect to MongoDB", err);
+    }
+})(); 

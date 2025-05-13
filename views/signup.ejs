@@ -1,0 +1,32 @@
+<%- include("templates/header") %>
+
+<h1>Please sign up</h1>
+
+<form action="/submitUser" method="POST">
+    <div class="form-floating">
+        <input type="text" class="form-control" id="floatingName" name="name" placeholder="John Doe" required>
+        <label for="floatingName">Full Name</label>
+    </div>
+
+    <div class="form-floating">
+        <input type="email" class="form-control" id="floatingEmail" name="email" placeholder="name@example.com" required>
+        <label for="floatingEmail">Email address</label>
+    </div>
+
+    <div class="form-floating">
+        <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Password" required>
+        <label for="floatingPassword">Password</label>
+    </div>
+
+    <div class="form-check text-start my-3">
+        <input class="form-check-input" type="checkbox" value="remember-me" id="checkDefault" name="remember">
+        <label class="form-check-label" for="checkDefault">
+            Remember me
+        </label>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-primary rounded-pill px-3">Sign up</button>
+</form>
+
+<%- include("templates/footer") %>

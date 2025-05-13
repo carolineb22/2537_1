@@ -1,0 +1,21 @@
+<%- include('templates/header') %>
+
+<h1 class="text-center my-4">Welcome to the Member's Area, <%= user %>!</h1>
+
+<div class="text-center mb-4">
+    <a class="btn btn-primary rounded-pill px-4" href="/logout">Log out</a>
+</div>
+
+<div class="container">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <% ['cat1.jpg', 'cat2.jpg', 'cat3.jpg'].forEach(function(img) { %>
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="/images/<%= img %>" class="card-img-top" alt="Cat Image">
+                </div>
+            </div>
+        <% }); %>
+    </div>
+</div>
+
+<%- include('templates/footer') %>
